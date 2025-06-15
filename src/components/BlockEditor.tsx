@@ -79,9 +79,22 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ block }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {block.tags.map((tag) => (
-              <TagRow key={tag.id} blockId={block.id} tag={tag} />
-            ))}
+            {/* Table Header */}
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
+                <div className="col-span-2">標籤</div>
+                <div className="col-span-4">原始內容</div>
+                <div className="col-span-4">更新內容</div>
+                <div className="col-span-2">操作</div>
+              </div>
+            </div>
+            
+            {/* Tags */}
+            <div className="space-y-2">
+              {block.tags.map((tag) => (
+                <TagRow key={tag.id} blockId={block.id} tag={tag} />
+              ))}
+            </div>
           </div>
         )}
       </div>
