@@ -40,14 +40,14 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
 
   const getTagTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
-      'h1': 'bg-red-100 text-red-700 border-red-200',
-      'h2': 'bg-orange-100 text-orange-700 border-orange-200',
-      'h3': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      'p': 'bg-blue-100 text-blue-700 border-blue-200',
-      'title': 'bg-purple-100 text-purple-700 border-purple-200',
-      'meta': 'bg-green-100 text-green-700 border-green-200',
+      'h1': 'bg-gray-800 text-white border-gray-800',
+      'h2': 'bg-gray-700 text-white border-gray-700',
+      'h3': 'bg-gray-600 text-white border-gray-600',
+      'p': 'bg-gray-500 text-white border-gray-500',
+      'title': 'bg-gray-400 text-white border-gray-400',
+      'meta': 'bg-gray-300 text-black border-gray-300',
     };
-    return colors[type.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-200';
+    return colors[type.toLowerCase()] || 'bg-gray-200 text-black border-gray-200';
   };
 
   const getStatusInfo = () => {
@@ -55,13 +55,13 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
     const hasNew = tag.newContent.trim().length > 0;
     
     if (!hasOld && hasNew) {
-      return { status: '新增', color: 'bg-green-100 text-green-700 border-green-200' };
+      return { status: '新增', color: 'bg-gray-800 text-white border-gray-800' };
     } else if (hasOld && !hasNew) {
       return { status: '刪除', color: 'bg-red-100 text-red-700 border-red-200' };
     } else if (hasOld && hasNew) {
-      return { status: '修改', color: 'bg-blue-100 text-blue-700 border-blue-200' };
+      return { status: '修改', color: 'bg-gray-600 text-white border-gray-600' };
     } else {
-      return { status: '待編輯', color: 'bg-gray-100 text-gray-700 border-gray-200' };
+      return { status: '待編輯', color: 'bg-gray-100 text-gray-700 border-gray-300' };
     }
   };
 
@@ -72,12 +72,12 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Tag className="text-blue-600" size={18} />
+          <Tag className="text-gray-700" size={18} />
           <Input
             value={tag.type}
             onChange={handleTypeChange}
             placeholder="標籤類型（如：h1, p, title...）"
-            className="w-48 text-sm font-medium"
+            className="w-48 text-sm font-medium border-gray-300 focus:border-black"
           />
           {tag.type && (
             <span className={`px-2 py-1 text-xs rounded-full border ${getTagTypeColor(tag.type)}`}>
@@ -107,7 +107,7 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
             value={tag.oldContent}
             onChange={handleOldContentChange}
             placeholder="留空表示「新增」內容"
-            className="min-h-[100px] resize-y"
+            className="min-h-[100px] resize-y border-gray-300 focus:border-black"
           />
           {tag.oldContent.trim().length > 0 && (
             <p className="text-xs text-gray-500">
@@ -128,7 +128,7 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
             value={tag.newContent}
             onChange={handleNewContentChange}
             placeholder="留空表示「刪除」內容"
-            className="min-h-[100px] resize-y"
+            className="min-h-[100px] resize-y border-gray-300 focus:border-black"
           />
           {tag.newContent.trim().length > 0 && (
             <p className="text-xs text-gray-500">
