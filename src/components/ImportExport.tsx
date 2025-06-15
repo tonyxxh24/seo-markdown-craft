@@ -65,9 +65,9 @@ export const ImportExport: React.FC = () => {
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6">
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-4">
-        <FileText className="text-blue-600" size={24} />
+        <FileText className="text-gray-700" size={24} />
         <h2 className="text-xl font-semibold text-gray-800">檔案管理</h2>
       </div>
       
@@ -84,9 +84,9 @@ export const ImportExport: React.FC = () => {
           <Button
             onClick={() => fileInputRef.current?.click()}
             variant="outline"
-            className="w-full h-12 border-2 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group"
+            className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-gray-500 hover:bg-gray-50 transition-all duration-300 group text-gray-700"
           >
-            <Upload className="mr-2 group-hover:scale-110 transition-transform" size={20} />
+            <Upload className="mr-2 group-hover:scale-110 transition-transform text-gray-600" size={20} />
             匯入 Markdown 檔案
           </Button>
         </div>
@@ -96,7 +96,7 @@ export const ImportExport: React.FC = () => {
           <Button
             onClick={handleExport}
             disabled={state.blocks.length === 0}
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+            className="w-full h-12 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group disabled:bg-gray-400"
           >
             <Download className="mr-2 group-hover:scale-110 transition-transform" size={20} />
             匯出 Markdown 檔案
@@ -105,8 +105,8 @@ export const ImportExport: React.FC = () => {
       </div>
 
       {state.blocks.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-700">
+        <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+          <p className="text-sm text-gray-700">
             目前有 <span className="font-semibold">{state.blocks.length}</span> 個 SEO 區塊，
             共 <span className="font-semibold">{state.blocks.reduce((sum, block) => sum + block.tags.length, 0)}</span> 個標籤
           </p>

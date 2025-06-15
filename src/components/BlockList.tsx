@@ -38,12 +38,12 @@ export const BlockList: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Blocks className="text-purple-600" size={24} />
+        <Blocks className="text-gray-700" size={24} />
         <h2 className="text-2xl font-bold text-gray-800">SEO 區塊管理</h2>
       </div>
 
       {/* Add New Block */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+      <div className="bg-gray-100 rounded-xl p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">新增 SEO 區塊</h3>
         <div className="flex gap-3">
           <Input
@@ -51,12 +51,12 @@ export const BlockList: React.FC = () => {
             value={newBlockName}
             onChange={(e) => setNewBlockName(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-1 border-2 border-blue-200 focus:border-blue-500 transition-colors"
+            className="flex-1 border-2 border-gray-300 focus:border-gray-600 transition-colors"
           />
           <Button
             onClick={handleAddBlock}
             disabled={!newBlockName.trim()}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-black hover:bg-gray-800 text-white px-6 shadow-lg hover:shadow-xl transition-all duration-300 disabled:bg-gray-400"
           >
             <Plus size={20} className="mr-2" />
             新增區塊
@@ -86,12 +86,12 @@ export const BlockList: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     {isExpanded ? (
-                      <ChevronDown className="text-blue-600" size={20} />
+                      <ChevronDown className="text-gray-600" size={20} />
                     ) : (
                       <ChevronRight className="text-gray-400" size={20} />
                     )}
                     <h3 className="text-lg font-semibold text-gray-800">{block.name}</h3>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                    <span className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded-full">
                       {block.tags.length} 個標籤
                     </span>
                   </div>
