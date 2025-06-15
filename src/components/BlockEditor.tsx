@@ -12,7 +12,7 @@ interface BlockEditorProps {
 }
 
 export const BlockEditor: React.FC<BlockEditorProps> = ({ block }) => {
-  const { updateBlock, deleteBlock, addTag } = useSEO();
+  const { updateBlock, deleteBlock, addTag, state } = useSEO();
   const { toast } = useToast();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,6 +30,15 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ block }) => {
   };
 
   const handleAddTag = () => {
+    if (state.editingTagId !== null) {
+      toast({
+        title: "無法新增標籤",
+        description: "請先完成目前標籤的編輯",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     addTag(block.id);
     toast({
       title: "標籤已新增",
@@ -47,12 +56,14 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ block }) => {
           onChange={handleNameChange}
           className="flex-1 text-lg font-semibold border-2 border-gray-300 focus:border-black"
           placeholder="區塊名稱"
+          disabled={state.editingTagId !== null}
         />
         <Button
           onClick={handleDeleteBlock}
           variant="outline"
           size="sm"
           className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+          disabled={state.editingTagId !== null}
         >
           <Trash2 size={16} className="mr-1" />
           刪除區塊
@@ -66,11 +77,20 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ block }) => {
           <Button
             onClick={handleAddTag}
             className="bg-black hover:bg-gray-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
+            disabled={state.editingTagId !== null}
           >
             <Plus size={16} className="mr-2" />
             新增標籤
           </Button>
         </div>
+
+        {state.editingTagId !== null && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-700">
+              目前有標籤正在編輯中，請先完成編輯才能進行其他操作。
+            </p>
+          </div>
+        )}
 
         {block.tags.length === 0 ? (
           <div className="text-center py-8 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">

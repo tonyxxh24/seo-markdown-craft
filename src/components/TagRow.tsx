@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,9 +13,10 @@ interface TagRowProps {
 }
 
 export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
-  const { updateTag, deleteTag } = useSEO();
+  const { updateTag, deleteTag, setEditingTag, state } = useSEO();
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(true);
+  
+  const isEditing = state.editingTagId === tag.id;
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateTag(blockId, tag.id, { type: e.target.value });
@@ -39,16 +40,20 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
     }
   };
 
+  const handleEdit = () => {
+    setEditingTag(tag.id);
+  };
+
   const handleSave = () => {
-    setIsEditing(false);
+    setEditingTag(null);
     toast({
       title: "標籤已儲存",
       description: "標籤內容已成功儲存",
     });
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
+  const handleCancel = () => {
+    setEditingTag(null);
   };
 
   const getTagTypeColor = (type: string) => {
@@ -111,6 +116,14 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
               <Save size={16} />
             </Button>
             <Button
+              onClick={handleCancel}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+            >
+              取消
+            </Button>
+            <Button
               onClick={handleDeleteTag}
               variant="ghost"
               size="sm"
@@ -147,7 +160,7 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
     );
   }
 
-  // Saved view - table format
+  // Read-only view - table format
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
       <div className="grid grid-cols-12 gap-4 items-center">
@@ -186,6 +199,7 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
             variant="outline"
             size="sm"
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 hover:border-blue-300"
+            disabled={state.editingTagId !== null && state.editingTagId !== tag.id}
           >
             <Edit size={16} />
           </Button>
@@ -194,6 +208,7 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
             variant="ghost"
             size="sm"
             className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            disabled={state.editingTagId !== null && state.editingTagId !== tag.id}
           >
             <Trash2 size={16} />
           </Button>
