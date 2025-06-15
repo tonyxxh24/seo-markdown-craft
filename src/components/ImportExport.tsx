@@ -40,15 +40,49 @@ export const ImportExport: React.FC = () => {
   };
 
   const handleExport = () => {
+    console.log('Export button clicked');
+    console.log('Blocks to export:', state.blocks);
+    
+    if (!state.blocks || state.blocks.length === 0) {
+      toast({
+        title: "無法匯出",
+        description: "目前沒有可匯出的 SEO 區塊",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const markdown = serializeMarkdown(state.blocks);
-      const blob = new Blob([markdown], { type: 'text/markdown' });
+      console.log('Generated markdown:', markdown);
+      
+      if (!markdown || markdown.trim() === '') {
+        toast({
+          title: "匯出失敗",
+          description: "生成的 Markdown 內容為空",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `seo-content-${new Date().toISOString().split('T')[0]}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `seo-content-${new Date().toISOString().split('T')[0]}.md`;
+      link.style.display = 'none';
+      
+      // Add to DOM, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
       
       toast({
         title: "匯出成功",
@@ -58,7 +92,7 @@ export const ImportExport: React.FC = () => {
       console.error('Export error:', error);
       toast({
         title: "匯出失敗",
-        description: "匯出檔案時發生錯誤",
+        description: `匯出檔案時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`,
         variant: "destructive",
       });
     }
@@ -95,11 +129,13 @@ export const ImportExport: React.FC = () => {
         <div className="flex-1">
           <Button
             onClick={handleExport}
-            disabled={state.blocks.length === 0}
-            className="w-full h-12 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group disabled:bg-gray-400"
+            className="w-full h-12 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
           >
             <Download className="mr-2 group-hover:scale-110 transition-transform" size={20} />
             匯出 Markdown 檔案
+            {state.blocks.length > 0 && (
+              <span className="ml-2 text-xs opacity-75">({state.blocks.length})</span>
+            )}
           </Button>
         </div>
       </div>
