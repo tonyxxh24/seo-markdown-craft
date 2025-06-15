@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useSEO, SEOTag } from '@/contexts/SEOContext';
-import { Trash2, Tag, ArrowRight } from 'lucide-react';
+import { Trash2, Tag, ArrowRight, Save, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TagRowProps {
@@ -15,6 +15,7 @@ interface TagRowProps {
 export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
   const { updateTag, deleteTag } = useSEO();
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(true);
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateTag(blockId, tag.id, { type: e.target.value });
@@ -36,6 +37,18 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
         description: "標籤已成功刪除",
       });
     }
+  };
+
+  const handleSave = () => {
+    setIsEditing(false);
+    toast({
+      title: "標籤已儲存",
+      description: "標籤內容已成功儲存",
+    });
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
   };
 
   const getTagTypeColor = (type: string) => {
@@ -78,6 +91,7 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
             onChange={handleTypeChange}
             placeholder="標籤類型（如：h1, p, title...）"
             className="w-48 text-sm font-medium border-gray-300 focus:border-black"
+            readOnly={!isEditing}
           />
           {tag.type && (
             <span className={`px-2 py-1 text-xs rounded-full border ${getTagTypeColor(tag.type)}`}>
@@ -88,55 +102,104 @@ export const TagRow: React.FC<TagRowProps> = ({ blockId, tag }) => {
             {statusInfo.status}
           </span>
         </div>
-        <Button
-          onClick={handleDeleteTag}
-          variant="ghost"
-          size="sm"
-          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-        >
-          <Trash2 size={16} />
-        </Button>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <Button
+              onClick={handleSave}
+              variant="outline"
+              size="sm"
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 hover:border-green-300"
+            >
+              <Save size={16} />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleEdit}
+              variant="outline"
+              size="sm"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 hover:border-blue-300"
+            >
+              <Edit size={16} />
+            </Button>
+          )}
+          <Button
+            onClick={handleDeleteTag}
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Old Content */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">原始內容</label>
-          <Textarea
-            value={tag.oldContent}
-            onChange={handleOldContentChange}
-            placeholder="留空表示「新增」內容"
-            className="min-h-[100px] resize-y border-gray-300 focus:border-black"
-          />
-          {tag.oldContent.trim().length > 0 && (
-            <p className="text-xs text-gray-500">
-              {tag.oldContent.trim().length} 個字元
-            </p>
-          )}
-        </div>
+      {isEditing ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Old Content */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">原始內容</label>
+            <Textarea
+              value={tag.oldContent}
+              onChange={handleOldContentChange}
+              placeholder="留空表示「新增」內容"
+              className="min-h-[100px] resize-y border-gray-300 focus:border-black"
+            />
+            {tag.oldContent.trim().length > 0 && (
+              <p className="text-xs text-gray-500">
+                {tag.oldContent.trim().length} 個字元
+              </p>
+            )}
+          </div>
 
-        {/* Arrow */}
-        <div className="hidden lg:flex items-center justify-center">
-          <ArrowRight className="text-gray-400" size={24} />
-        </div>
+          {/* Arrow */}
+          <div className="hidden lg:flex items-center justify-center">
+            <ArrowRight className="text-gray-400" size={24} />
+          </div>
 
-        {/* New Content */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">更新內容</label>
-          <Textarea
-            value={tag.newContent}
-            onChange={handleNewContentChange}
-            placeholder="留空表示「刪除」內容"
-            className="min-h-[100px] resize-y border-gray-300 focus:border-black"
-          />
-          {tag.newContent.trim().length > 0 && (
-            <p className="text-xs text-gray-500">
-              {tag.newContent.trim().length} 個字元
-            </p>
-          )}
+          {/* New Content */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">更新內容</label>
+            <Textarea
+              value={tag.newContent}
+              onChange={handleNewContentChange}
+              placeholder="留空表示「刪除」內容"
+              className="min-h-[100px] resize-y border-gray-300 focus:border-black"
+            />
+            {tag.newContent.trim().length > 0 && (
+              <p className="text-xs text-gray-500">
+                {tag.newContent.trim().length} 個字元
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Saved Content Display */}
+          <div className="grid grid-cols-1 gap-3">
+            {tag.oldContent.trim().length > 0 && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">原始內容</label>
+                <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-sm text-gray-800 truncate" title={tag.oldContent}>
+                    {tag.oldContent}
+                  </p>
+                </div>
+              </div>
+            )}
+            {tag.newContent.trim().length > 0 && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">更新內容</label>
+                <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-sm text-gray-800 truncate" title={tag.newContent}>
+                    {tag.newContent}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
