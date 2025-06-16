@@ -1,116 +1,145 @@
 
-import { SEOBlock, SEOTag } from '@/contexts/SEOContext';
+import { SEOPage, SEOBlock, SEOTag } from '@/contexts/SEOContext';
 import { v4 as uuidv4 } from 'uuid';
 
-export const parseMarkdown = (text: string): SEOBlock[] => {
-  const blocks: SEOBlock[] = [];
+export function generateMarkdown(pages: SEOPage[]): string {
+  let markdown = '# SEO Content Management\n\n';
   
-  // Split by ## headers
-  const sections = text.split(/^##\s+/m).filter(section => section.trim());
+  pages.forEach((page, pageIndex) => {
+    markdown += `## Page: ${page.name}\n\n`;
+    
+    if (page.blocks.length === 0) {
+      markdown += '*此頁面尚未添加任何區塊*\n\n';
+      return;
+    }
+    
+    page.blocks.forEach((block, blockIndex) => {
+      markdown += `### Block ${blockIndex + 1}: ${block.name}\n\n`;
+      
+      if (block.tags.length === 0) {
+        markdown += '*此區塊尚未添加任何標籤*\n\n';
+        return;
+      }
+      
+      // Table header
+      markdown += '| 標籤類型 | 原始內容 | 更新內容 |\n';
+      markdown += '|---------|---------|----------|\n';
+      
+      // Table rows
+      block.tags.forEach((tag) => {
+        const tagType = tag.type || '-';
+        const oldContent = tag.oldContent || '-';
+        const newContent = tag.newContent || '-';
+        
+        markdown += `| ${tagType} | ${oldContent} | ${newContent} |\n`;
+      });
+      
+      markdown += '\n';
+    });
+    
+    markdown += '\n';
+  });
   
-  for (const section of sections) {
-    const lines = section.split('\n');
-    const name = lines[0].trim();
+  return markdown;
+}
+
+export function parseMarkdown(content: string): SEOPage[] {
+  const lines = content.split('\n');
+  const pages: SEOPage[] = [];
+  let currentPage: SEOPage | null = null;
+  let currentBlock: SEOBlock | null = null;
+  let inTableSection = false;
+  let tableHeaderPassed = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
     
-    // Find the seo code block
-    const seoBlockStart = lines.findIndex(line => line.trim() === '```seo');
-    const seoBlockEnd = lines.findIndex((line, index) => 
-      index > seoBlockStart && line.trim() === '```'
-    );
+    // Skip empty lines
+    if (!line) continue;
     
-    if (seoBlockStart === -1 || seoBlockEnd === -1) {
+    // Page header (## Page: ...)
+    if (line.startsWith('## Page: ')) {
+      const pageName = line.replace('## Page: ', '').trim();
+      currentPage = {
+        id: uuidv4(),
+        name: pageName || '未命名頁面',
+        blocks: [],
+      };
+      pages.push(currentPage);
+      currentBlock = null;
+      inTableSection = false;
+      tableHeaderPassed = false;
       continue;
     }
     
-    const seoContent = lines.slice(seoBlockStart + 1, seoBlockEnd).join('\n');
-    
-    try {
-      const blockData = parseYamlLike(seoContent);
-      const block: SEOBlock = {
-        id: blockData.id || uuidv4(),
-        name: blockData.name || name,
-        tags: blockData.tags || []
-      };
+    // Block header (### Block X: ...)
+    if (line.startsWith('### Block') && line.includes(': ')) {
+      if (!currentPage) {
+        // Create default page if none exists
+        currentPage = {
+          id: uuidv4(),
+          name: '預設頁面',
+          blocks: [],
+        };
+        pages.push(currentPage);
+      }
       
-      blocks.push(block);
-    } catch (error) {
-      console.error('Error parsing block:', error);
-    }
-  }
-  
-  return blocks;
-};
-
-export const serializeMarkdown = (blocks: SEOBlock[]): string => {
-  let markdown = '';
-  
-  for (const block of blocks) {
-    markdown += `## ${block.name}\n`;
-    markdown += '```seo\n';
-    markdown += `id: ${block.id}\n`;
-    markdown += `name: ${block.name}\n`;
-    
-    if (block.tags.length > 0) {
-      markdown += 'tags:\n';
-      for (const tag of block.tags) {
-        markdown += `  - id: ${tag.id}\n`;
-        markdown += `    type: ${tag.type}\n`;
-        markdown += `    old: "${tag.oldContent.replace(/"/g, '\\"')}"\n`;
-        markdown += `    new: "${tag.newContent.replace(/"/g, '\\"')}"\n`;
-      }
-    } else {
-      markdown += 'tags: []\n';
-    }
-    
-    markdown += '```\n\n';
-  }
-  
-  return markdown;
-};
-
-const parseYamlLike = (content: string): any => {
-  const lines = content.split('\n');
-  const result: any = { tags: [] };
-  let currentTag: any = null;
-  let inTags =  false;
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    if (trimmed.startsWith('id:')) {
-      result.id = trimmed.substring(3).trim();
-    } else if (trimmed.startsWith('name:')) {
-      result.name = trimmed.substring(5).trim();
-    } else if (trimmed === 'tags:') {
-      inTags = true;
-    } else if (inTags && trimmed.startsWith('- id:')) {
-      if (currentTag) {
-        result.tags.push(currentTag);
-      }
-      currentTag = {
-        id: trimmed.substring(5).trim(),
-        type: '',
-        oldContent: '',
-        newContent: ''
+      const blockName = line.split(': ').slice(1).join(': ').trim();
+      currentBlock = {
+        id: uuidv4(),
+        name: blockName || '未命名區塊',
+        tags: [],
       };
-    } else if (currentTag && trimmed.startsWith('type:')) {
-      currentTag.type = trimmed.substring(5).trim();
-    } else if (currentTag && trimmed.startsWith('old:')) {
-      const value = trimmed.substring(4).trim();
-      currentTag.oldContent = value.startsWith('"') && value.endsWith('"') 
-        ? value.slice(1, -1).replace(/\\"/g, '"')
-        : value;
-    } else if (currentTag && trimmed.startsWith('new:')) {
-      const value = trimmed.substring(4).trim();
-      currentTag.newContent = value.startsWith('"') && value.endsWith('"')
-        ? value.slice(1, -1).replace(/\\"/g, '"')
-        : value;
+      currentPage.blocks.push(currentBlock);
+      inTableSection = false;
+      tableHeaderPassed = false;
+      continue;
+    }
+    
+    // Table header detection
+    if (line.includes('標籤類型') && line.includes('原始內容') && line.includes('更新內容')) {
+      inTableSection = true;
+      tableHeaderPassed = false;
+      continue;
+    }
+    
+    // Table separator line
+    if (inTableSection && line.includes('---') && line.includes('|')) {
+      tableHeaderPassed = true;
+      continue;
+    }
+    
+    // Table data rows
+    if (inTableSection && tableHeaderPassed && line.includes('|') && currentBlock) {
+      const parts = line.split('|').map(part => part.trim()).filter(part => part);
+      
+      if (parts.length >= 3) {
+        const tag: SEOTag = {
+          id: uuidv4(),
+          type: parts[0] === '-' ? '' : parts[0],
+          oldContent: parts[1] === '-' ? '' : parts[1],
+          newContent: parts[2] === '-' ? '' : parts[2],
+        };
+        currentBlock.tags.push(tag);
+      }
+      continue;
+    }
+    
+    // Reset table section if we encounter non-table content
+    if (inTableSection && !line.includes('|') && !line.includes('---')) {
+      inTableSection = false;
+      tableHeaderPassed = false;
     }
   }
   
-  if (currentTag) {
-    result.tags.push(currentTag);
+  // If no pages were created, create a default one
+  if (pages.length === 0) {
+    pages.push({
+      id: uuidv4(),
+      name: '預設頁面',
+      blocks: [],
+    });
   }
   
-  return result;
-};
+  return pages;
+}

@@ -1,65 +1,24 @@
 
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useSEO } from '@/contexts/SEOContext';
-import { parseMarkdown, serializeMarkdown } from '@/utils/markdownUtils';
-import { Upload, Download, FileText } from 'lucide-react';
+import { Download, Upload, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateMarkdown, parseMarkdown } from '@/utils/markdownUtils';
 
 export const ImportExport: React.FC = () => {
-  const { state, setBlocks } = useSEO();
+  const { state, setPages } = useSEO();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const blocks = parseMarkdown(text);
-      setBlocks(blocks);
-      toast({
-        title: "匯入成功",
-        description: `已成功匯入 ${blocks.length} 個 SEO 區塊`,
-      });
-    } catch (error) {
-      console.error('Import error:', error);
-      toast({
-        title: "匯入失敗",
-        description: "請檢查檔案格式是否正確",
-        variant: "destructive",
-      });
-    }
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   const handleExport = () => {
-    console.log('Export button clicked');
-    console.log('Blocks to export:', state.blocks);
-    
-    if (!state.blocks || state.blocks.length === 0) {
-      toast({
-        title: "無法匯出",
-        description: "目前沒有可匯出的 SEO 區塊",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      const markdown = serializeMarkdown(state.blocks);
-      console.log('Generated markdown:', markdown);
+      const markdown = generateMarkdown(state.pages);
       
-      if (!markdown || markdown.trim() === '') {
+      if (!markdown || markdown.trim().length === 0) {
         toast({
           title: "匯出失敗",
-          description: "生成的 Markdown 內容為空",
+          description: "沒有可匯出的內容",
           variant: "destructive",
         });
         return;
@@ -67,84 +26,136 @@ export const ImportExport: React.FC = () => {
 
       const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      
-      // Create download link
       const link = document.createElement('a');
       link.href = url;
-      link.download = `seo-content-${new Date().toISOString().split('T')[0]}.md`;
-      link.style.display = 'none';
-      
-      // Add to DOM, click, and remove
+      link.download = 'seo-content.md';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      // Clean up
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 100);
-      
+      URL.revokeObjectURL(url);
+
+      const totalBlocks = state.pages.reduce((sum, page) => sum + page.blocks.length, 0);
       toast({
         title: "匯出成功",
-        description: "SEO 內容已成功匯出為 Markdown 檔案",
+        description: `已匯出 ${state.pages.length} 個頁面，共 ${totalBlocks} 個區塊的內容`,
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
         title: "匯出失敗",
-        description: `匯出檔案時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`,
+        description: "匯出過程中發生錯誤",
         variant: "destructive",
       });
     }
   };
 
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (state.editingTagId !== null) {
+      toast({
+        title: "無法匯入",
+        description: "請先完成目前標籤的編輯",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        if (!content || content.trim().length === 0) {
+          toast({
+            title: "匯入失敗",
+            description: "檔案內容為空",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const pages = parseMarkdown(content);
+        if (pages.length === 0) {
+          toast({
+            title: "匯入失敗",
+            description: "無法解析檔案內容",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setPages(pages);
+        const totalBlocks = pages.reduce((sum, page) => sum + page.blocks.length, 0);
+        toast({
+          title: "匯入成功",
+          description: `已匯入 ${pages.length} 個頁面，共 ${totalBlocks} 個區塊`,
+        });
+      } catch (error) {
+        console.error('Import error:', error);
+        toast({
+          title: "匯入失敗",
+          description: "檔案格式不正確或內容無法解析",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const totalBlocks = state.pages.reduce((sum, page) => sum + page.blocks.length, 0);
+
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <FileText className="text-gray-700" size={24} />
-        <h2 className="text-xl font-semibold text-gray-800">檔案管理</h2>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Import Section */}
-        <div className="flex-1">
-          <Input
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <FileText className="text-gray-700" size={24} />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">檔案管理</h3>
+            <p className="text-sm text-gray-600">
+              匯入或匯出 Markdown 格式的 SEO 內容 ({state.pages.length} 頁面，{totalBlocks} 區塊)
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex gap-3">
+          <input
             type="file"
-            accept=".md,.markdown"
-            onChange={handleFileImport}
-            ref={fileInputRef}
+            accept=".md,.txt"
+            onChange={handleImport}
             className="hidden"
+            ref={fileInputRef}
           />
+          
           <Button
             onClick={() => fileInputRef.current?.click()}
             variant="outline"
-            className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-gray-500 hover:bg-gray-50 transition-all duration-300 group text-gray-700"
+            className="border-black text-black hover:bg-black hover:text-white transition-colors"
+            disabled={state.editingTagId !== null}
           >
-            <Upload className="mr-2 group-hover:scale-110 transition-transform text-gray-600" size={20} />
-            匯入 Markdown 檔案
+            <Upload size={16} className="mr-2" />
+            匯入 Markdown
           </Button>
-        </div>
-
-        {/* Export Section */}
-        <div className="flex-1">
+          
           <Button
             onClick={handleExport}
-            className="w-full h-12 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+            className="bg-black hover:bg-gray-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
           >
-            <Download className="mr-2 group-hover:scale-110 transition-transform" size={20} />
-            匯出 Markdown 檔案
-            {state.blocks.length > 0 && (
-              <span className="ml-2 text-xs opacity-75">({state.blocks.length})</span>
-            )}
+            <Download size={16} className="mr-2" />
+            匯出 Markdown
           </Button>
         </div>
       </div>
 
-      {state.blocks.length > 0 && (
-        <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-700">
-            目前有 <span className="font-semibold">{state.blocks.length}</span> 個 SEO 區塊，
-            共 <span className="font-semibold">{state.blocks.reduce((sum, block) => sum + block.tags.length, 0)}</span> 個標籤
+      {state.editingTagId !== null && (
+        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="text-sm text-amber-700">
+            目前有標籤正在編輯中，請先完成編輯才能進行匯入操作。
           </p>
         </div>
       )}
