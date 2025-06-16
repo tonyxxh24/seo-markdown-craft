@@ -115,7 +115,7 @@ export const PageSidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-80 bg-white border-r border-gray-200 flex flex-col min-h-screen">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">頁面管理</h2>
@@ -197,12 +197,12 @@ export const PageSidebar: React.FC = () => {
                   >
                     <FileText size={16} />
                     <span className="flex-1 font-medium truncate">{page.name}</span>
-                    <span className="text-xs opacity-70">
+                    <span className="text-xs opacity-70 group-hover:invisible transition-opacity">
                       {page.blocks.length} 區塊
                     </span>
                   </div>
                   
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 invisible group-hover:visible transition-all flex gap-1">
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
